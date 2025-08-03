@@ -26,7 +26,7 @@ if [ "$#" -eq 1 ]; then
     done
 elif [ "$#" -eq 2 ]; then
     # If a domain and a specific subdomain are provided, check only that one
-    subdomain=$1
-    domain=$2
+    domain=$1
+    subdomain=$2
     check_subdomain "$subdomain" "$domain"
 fi
