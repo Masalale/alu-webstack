@@ -7,13 +7,18 @@
 check_subdomain() {
     local full_domain="$1.$2"
     # Use host to query DNS and awk to parse the output
-    local result=$(host $full_domain | awk '/has address/ {printf "A %s", $4} /is an alias for/ {printf "CNAME %s", $6}')
+    local result=$(host $full_domain | awk '/has address/ {print "A " $4} /is an alias for/ {print "CNAME " $NF}')
     
     # Read the parsed result into variables
     read -r record_type destination <<< "$result"
 
-    # Print the formatted output
-    echo "The subdomain $1 is a $record_type record and points to $destination"
+    # If it's a CNAME, resolve the final A record
+    if [ "$record_type" = "CNAME" ]; then
+        local final_dest=$(host -t A $(echo "$destination" | sed 's/.$//') | awk '/has address/ {print $4}')
+        echo "The subdomain $1 is a $record_type record and points to $final_dest"
+    else
+        echo "The subdomain $1 is a $record_type record and points to $destination"
+    fi
 }
 
 # Main script logic
