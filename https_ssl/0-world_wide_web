@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# This script displays information about subdomains for a given domain.
+
+# shellcheck disable=SC2086
+
+# Function to look up and display DNS record information for a subdomain
+check_subdomain() {
+    local full_domain="$1.$2"
+    # Use host to query DNS and awk to parse the output
+    local result=$(host $full_domain | awk '/has address/ {printf "A %s", $4} /is an alias for/ {printf "CNAME %s", $6}')
+    
+    # Read the parsed result into variables
+    read -r record_type destination <<< "$result"
+
+    # Print the formatted output
+    echo "The subdomain $1 is a $record_type record and points to $destination"
+}
+
+# Main script logic
+if [ "$#" -eq 1 ]; then
+    # If only a domain is provided, check the standard subdomains
+    domain=$1
+    subdomains=("www" "lb-01" "web-01" "web-02")
+    for sub in "${subdomains[@]}"; do
+        check_subdomain "$sub" "$domain"
+    done
+elif [ "$#" -eq 2 ]; then
+    # If a domain and a specific subdomain are provided, check only that one
+    subdomain=$1
+    domain=$2
+    check_subdomain "$subdomain" "$domain"
+fi
